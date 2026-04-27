@@ -234,6 +234,54 @@
                 will-change: transform;
             }
 
+            /* 3D TERMINAL OVERLAY TEXT */
+            .image-overlay-text {
+                position: absolute;
+                bottom: 24px;
+                width: 86%;
+                left: 7%;
+                text-align: center;
+                font-family: var(--mono);
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #fff;
+                background: rgba(5, 10, 15, 0.75);
+                border: 1px solid rgba(0, 212, 255, 0.4);
+                padding: 0.7rem;
+                border-radius: 6px;
+                backdrop-filter: blur(8px);
+                transform: translateZ(60px); /* Massive 3D pop! */
+                pointer-events: none;
+                box-shadow:
+                    0 8px 25px rgba(0, 0, 0, 0.5),
+                    inset 0 0 15px rgba(0, 212, 255, 0.15);
+                text-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+                letter-spacing: 0.08em;
+                z-index: 20;
+                will-change: transform;
+            }
+
+            .cursor-blink {
+                display: inline-block;
+                width: 8px;
+                height: 14px;
+                background: var(--cyan);
+                margin-left: 6px;
+                vertical-align: middle;
+                animation: blink 1s step-end infinite;
+                box-shadow: 0 0 8px var(--cyan);
+            }
+
+            @keyframes blink {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0;
+                }
+            }
+
             .hero-tag {
                 font-family: var(--mono);
                 font-size: 0.72rem;
@@ -983,16 +1031,22 @@
                     </div>
                 </div>
 
-                <!-- RIGHT SIDE: Profile Image with Glare Layer -->
+                <!-- RIGHT SIDE: Profile Image with Glare Layer & Terminal Overlay -->
                 <div class="hero-visual">
                     <div class="image-wrapper" id="tilt-wrapper">
                         <div class="glare" id="glare"></div>
-                        <!-- Added Glare Element -->
                         <img
                             src="preview2.png"
                             alt="Sandeep K Bondugula"
                             id="tilt-image"
                         />
+
+                        <!-- THE NEW TEXT OVERLAY -->
+                        <div class="image-overlay-text" id="tilt-text">
+                            > stop chasing my tail -f<span
+                                class="cursor-blink"
+                            ></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1360,7 +1414,7 @@
             >
         </footer>
 
-        <!-- THREE.JS IMPORT (Restored!) -->
+        <!-- THREE.JS IMPORT -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
         <!-- JavaScript for Interactivity -->
@@ -1369,8 +1423,9 @@
             const wrapper = document.getElementById("tilt-wrapper");
             const img = document.getElementById("tilt-image");
             const glare = document.getElementById("glare");
+            const textOverlay = document.getElementById("tilt-text"); // Added text overlay logic
 
-            if (wrapper && img && glare) {
+            if (wrapper && img && glare && textOverlay) {
                 wrapper.addEventListener("mousemove", (e) => {
                     const rect = wrapper.getBoundingClientRect();
                     const x = e.clientX - rect.left;
@@ -1391,11 +1446,14 @@
                     // 1. Tilt the outer frame
                     wrapper.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
 
-                    // 2. Parallax the inner image (moves opposite to tilt for depth)
+                    // 2. Parallax the inner image
                     img.style.transform = `translateZ(40px) scale(1.05) translateX(${rotateY * -0.6}px) translateY(${rotateX * 0.6}px)`;
 
                     // 3. Move the light glare
                     glare.style.transform = `translateX(${glarePos}%) translateY(-50%)`;
+
+                    // 4. Extreme parallax pop for the text overlay!
+                    textOverlay.style.transform = `translateZ(60px) translateX(${rotateY * -1.2}px) translateY(${rotateX * 1.2}px)`;
                 });
 
                 wrapper.addEventListener("mouseleave", () => {
@@ -1403,6 +1461,7 @@
                     wrapper.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
                     img.style.transform = `translateZ(0px) scale(1) translateX(0px) translateY(0px)`;
                     glare.style.transform = `translateX(-100%) translateY(-50%)`;
+                    textOverlay.style.transform = `translateZ(60px) translateX(0px) translateY(0px)`;
 
                     // Add smooth CSS transition for the reset
                     wrapper.style.transition =
@@ -1411,6 +1470,8 @@
                         "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
                     glare.style.transition =
                         "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
+                    textOverlay.style.transition =
+                        "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
                 });
 
                 wrapper.addEventListener("mouseenter", () => {
@@ -1418,10 +1479,11 @@
                     wrapper.style.transition = "box-shadow 0.3s ease";
                     img.style.transition = "none";
                     glare.style.transition = "none";
+                    textOverlay.style.transition = "none";
                 });
             }
 
-            // ─── THREE.JS PARTICLE NETWORK (Restored!) ───────────────
+            // ─── THREE.JS PARTICLE NETWORK ───────────────
             const canvas = document.getElementById("bg-canvas");
             const renderer = new THREE.WebGLRenderer({
                 canvas,
@@ -1517,7 +1579,6 @@
             let lineTimer = 0;
             let mouseX = 0,
                 mouseY = 0;
-            // We already track mouse for cursor, we'll just tap into that for scene rotation
             document.addEventListener("mousemove", (e) => {
                 mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
                 mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
